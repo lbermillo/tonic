@@ -13,7 +13,7 @@ class MLP(torch.nn.Module):
         layers = []
         for i in range(len(sizes) - 1):
             layers += [torch.nn.Linear(sizes[i], sizes[i + 1]),
-                       getattr(torch.nn, self.activation)()]
+                       getattr(torch.nn, self.activation.__name__)()]
         self.model = torch.nn.Sequential(*layers)
         if self.fn is not None:
             self.model.apply(self.fn)
