@@ -204,11 +204,12 @@ class DistributionalDeterministicPolicyGradient:
 
 
 class TwinCriticSoftDeterministicPolicyGradient:
-    def __init__(self, optimizer=None, entropy_coeff=0.2, gradient_clip=0):
+    def __init__(self, optimizer=None, entropy_coeff=0.2, gradient_clip=0, alpha=0.99):
         self.optimizer = optimizer or \
             tf.keras.optimizers.Adam(lr=1e-3, epsilon=1e-8)
         self.entropy_coeff = entropy_coeff
         self.gradient_clip = gradient_clip
+        self.alpha = alpha
 
     def initialize(self, model):
         self.model = model
@@ -227,6 +228,9 @@ class TwinCriticSoftDeterministicPolicyGradient:
             values_2 = self.model.critic_2(observations, actions)
             values = tf.minimum(values_1, values_2)
             loss = tf.reduce_mean(self.entropy_coeff * log_probs - values)
+
+            # anneal entropy_coeff
+            self.entropy_coeff *= self.alpha
 
         gradients = tape.gradient(loss, self.variables)
         if self.gradient_clip > 0:

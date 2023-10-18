@@ -185,13 +185,14 @@ class TwinCriticDeterministicQLearning:
 
 class TwinCriticSoftQLearning:
     def __init__(
-        self, loss=None, optimizer=None, entropy_coeff=0.2, gradient_clip=0
+        self, loss=None, optimizer=None, entropy_coeff=0.2, gradient_clip=0, alpha=0.99,
     ):
         self.loss = loss or tf.keras.losses.MeanSquaredError()
         self.optimizer = optimizer or \
             tf.keras.optimizers.Adam(lr=1e-3, epsilon=1e-8)
         self.entropy_coeff = entropy_coeff
         self.gradient_clip = gradient_clip
+        self.alpha=alpha
 
     def initialize(self, model):
         self.model = model
@@ -224,6 +225,9 @@ class TwinCriticSoftQLearning:
             loss_1 = self.loss(returns, values_1)
             loss_2 = self.loss(returns, values_2)
             loss = loss_1 + loss_2
+
+        # anneal entropy_coeff
+        self.entropy_coeff *= self.alpha
 
         gradients = tape.gradient(loss, self.variables)
         if self.gradient_clip > 0:
